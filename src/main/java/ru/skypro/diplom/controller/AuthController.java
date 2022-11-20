@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import ru.skypro.diplom.dto.LoginReq;
-import ru.skypro.diplom.dto.RegisterReq;
-import ru.skypro.diplom.dto.Role;
+import ru.skypro.diplom.dto.auth.LoginReq;
+import ru.skypro.diplom.dto.auth.RegisterReq;
+import ru.skypro.diplom.dto.profile.Role;
 import ru.skypro.diplom.service.AuthService;
 
-import static ru.skypro.diplom.dto.Role.USER;
+import static ru.skypro.diplom.dto.profile.Role.USER;
 
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")

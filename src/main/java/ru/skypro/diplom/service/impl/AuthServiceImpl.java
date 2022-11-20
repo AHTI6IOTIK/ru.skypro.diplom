@@ -6,8 +6,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
-import ru.skypro.diplom.dto.RegisterReq;
-import ru.skypro.diplom.dto.Role;
+import ru.skypro.diplom.dto.auth.RegisterReq;
+import ru.skypro.diplom.dto.profile.Role;
 import ru.skypro.diplom.service.AuthService;
 
 @Service
@@ -39,11 +39,11 @@ public class AuthServiceImpl implements AuthService {
             return false;
         }
         manager.createUser(
-                User.withDefaultPasswordEncoder()
-                        .password(registerReq.getPassword())
-                        .username(registerReq.getUsername())
-                        .roles(role.name())
-                        .build()
+            User.withDefaultPasswordEncoder()
+                .password(registerReq.getPassword())
+                .username(registerReq.getUsername())
+                .roles(role.name())
+                .build()
         );
         return true;
     }

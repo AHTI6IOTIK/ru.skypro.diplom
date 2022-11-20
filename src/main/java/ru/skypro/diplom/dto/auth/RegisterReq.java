@@ -1,6 +1,7 @@
-package ru.skypro.diplom.dto;
+package ru.skypro.diplom.dto.auth;
 
 import lombok.Data;
+import ru.skypro.diplom.dto.profile.Role;
 
 @Data
 public class RegisterReq {

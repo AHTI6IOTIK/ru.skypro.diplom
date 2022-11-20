@@ -1,4 +1,4 @@
-package ru.skypro.diplom.dto;
+package ru.skypro.diplom.dto.auth;
 
 import lombok.Data;
 
