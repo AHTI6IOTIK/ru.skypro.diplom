@@ -3,8 +3,8 @@ package ru.skypro.diplom.dto.ads;
 import lombok.Data;
 
 @Data
-public class Ads {
-    private long author;
+public class CreateAdsDto {
+    private String description;
     private String image;
     private long pk;
     private long price;
