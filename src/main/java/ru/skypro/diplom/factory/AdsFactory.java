@@ -14,7 +14,7 @@ public class AdsFactory {
         String description,
         String image,
         long pk,
-        long price,
+        int price,
         String title
     ) {
         CreateAdsDto result = new CreateAdsDto();
@@ -30,7 +30,7 @@ public class AdsFactory {
     public AdsDto createAds(
         String image,
         long pk,
-        long price,
+        int price,
         String title
     ) {
         AdsDto result = new AdsDto();
@@ -67,7 +67,7 @@ public class AdsFactory {
         String image,
         String phone,
         long pk,
-        long price,
+        int price,
         String title
     ) {
         FullAdsDto fullAdsDto = new FullAdsDto();

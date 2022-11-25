@@ -3,17 +3,36 @@ package ru.skypro.diplom.service;
 import org.springframework.stereotype.Service;
 import ru.skypro.diplom.dto.ads.*;
 import ru.skypro.diplom.factory.AdsFactory;
+import ru.skypro.diplom.mapping.ads.AdsCommentDtoMapper;
+import ru.skypro.diplom.mapping.ads.AdsDtoMapper;
+import ru.skypro.diplom.mapping.ads.CreateAdsDtoMapper;
+import ru.skypro.diplom.mapping.ads.FullAdsDtoMapper;
 
 @Service
 public class AdsService {
 
     private final AdsFactory factory;
+    private final AdsCommentDtoMapper adsCommentDtoMapper;
+    private final AdsDtoMapper adsDtoMapper;
+    private final CreateAdsDtoMapper createAdsDtoMapper;
+    private final FullAdsDtoMapper fullAdsDtoMapper;
 
-    public AdsService(AdsFactory factory) {
+    public AdsService(
+        AdsFactory factory,
+        AdsCommentDtoMapper adsCommentDtoMapper,
+        AdsDtoMapper adsDtoMapper,
+        CreateAdsDtoMapper createAdsDtoMapper,
+        FullAdsDtoMapper fullAdsDtoMapper
+    ) {
         this.factory = factory;
+        this.adsCommentDtoMapper = adsCommentDtoMapper;
+        this.adsDtoMapper = adsDtoMapper;
+        this.createAdsDtoMapper = createAdsDtoMapper;
+        this.fullAdsDtoMapper = fullAdsDtoMapper;
     }
 
     public AdsDto createAds(CreateAdsDto createAdsDto) {
+        System.out.println("createAdsDtoMapper.toModel(createAdsDto) = " + createAdsDtoMapper.toModel(createAdsDto));
         return factory.createAds(
             "",
             1L,
@@ -95,7 +114,7 @@ public class AdsService {
             "image",
             "phone",
             adsId,
-            100L,
+            100,
             "title"
         );
     }
@@ -110,10 +129,10 @@ public class AdsService {
     }
 
     /**
-     * @TODO: Ads ads - заменить на entity
      * @param adsDto
      * @param updatedAdsDto
      * @return
+     * @TODO: Ads ads - заменить на entity
      */
     public boolean updateAds(AdsDto adsDto, AdsDto updatedAdsDto) {
         return false;
