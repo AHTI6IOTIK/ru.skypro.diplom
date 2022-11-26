@@ -3,10 +3,10 @@ package ru.skypro.diplom.dto.ads;
 import lombok.Data;
 
 @Data
-public class CreateAds {
-    private String description;
+public class AdsDto {
+    private long author;
     private String image;
     private long pk;
-    private long price;
+    private int price;
     private String title;
 }
