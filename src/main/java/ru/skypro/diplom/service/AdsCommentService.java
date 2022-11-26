@@ -1,83 +1,96 @@
 package ru.skypro.diplom.service;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import ru.skypro.diplom.dto.ads.AdsDto;
+import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.diplom.dto.ads.AdsCommentDto;
 import ru.skypro.diplom.dto.ads.ResponseWrapperAdsCommentDto;
-import ru.skypro.diplom.factory.AdsCommentFactory;
+import ru.skypro.diplom.entity.AdsEntity;
+import ru.skypro.diplom.entity.CommentEntity;
+import ru.skypro.diplom.mapping.ads.AdsCommentDtoMapper;
+import ru.skypro.diplom.repository.AdsRepository;
+import ru.skypro.diplom.repository.CommentRepository;
 
-import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AdsCommentService {
-    private final AdsCommentFactory factory;
+    private final AdsRepository adsRepository;
+    private final CommentRepository commentRepository;
+    private final AdsCommentDtoMapper adsCommentDtoMapper;
 
-    public AdsCommentService(AdsCommentFactory factory) {
-        this.factory = factory;
+    public AdsCommentService(
+        AdsRepository adsRepository,
+        CommentRepository commentRepository,
+        AdsCommentDtoMapper adsCommentDtoMapper
+    ) {
+        this.adsRepository = adsRepository;
+        this.commentRepository = commentRepository;
+        this.adsCommentDtoMapper = adsCommentDtoMapper;
     }
 
     public ResponseWrapperAdsCommentDto getAdsComments(long adPk) {
+        List<CommentEntity> commentList = commentRepository.findByAdsId(adPk);
+
+        if (commentList.isEmpty()) {
+            return null;
+        }
+
         ResponseWrapperAdsCommentDto wrapperAdsComment = new ResponseWrapperAdsCommentDto();
-        wrapperAdsComment.setCount(3);
-        wrapperAdsComment.setResult(new AdsCommentDto[]{
-            factory.createAdsComment(
-                LocalDateTime.of(2022, 12, 1, 12, 25),
-                1L,
-                1L,
-                "text"
-            ),
-            factory.createAdsComment(
-                LocalDateTime.of(2022, 12, 1, 12, 25),
-                2L,
-                2L,
-                "text"
-            ),
-            factory.createAdsComment(
-                LocalDateTime.of(2022, 12, 1, 12, 25),
-                2L,
-                2L,
-                "text"
-            ),
-        });
+
+        wrapperAdsComment.setCount(commentList.size());
+        wrapperAdsComment.setResult(
+            adsCommentDtoMapper.toAdsDtoList(commentList)
+                .toArray(new AdsCommentDto[0])
+        );
 
         return wrapperAdsComment;
     }
 
     public AdsCommentDto addAdsComment(long adPk, AdsCommentDto comment) {
-        comment.setPk(adPk);
-        return comment;
-    }
+        Optional<AdsEntity> optionalAds = adsRepository.findByIdAndUserId(adPk, comment.getAuthor());
 
-    public boolean deleteAdsComment(long adPk, long commentId) {
-        return false;
-    }
+        AdsEntity adsEntity = optionalAds.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    public AdsCommentDto getAdsComment(long adPk, long commentId) {
-        return factory.createAdsComment(
-            LocalDateTime.of(2022, 12, 20, 20, 20),
-            commentId,
-            1L,
-            "Text"
+        CommentEntity commentEntity = adsCommentDtoMapper.toModel(
+            comment,
+            adsEntity.getUser(),
+            adsEntity
+        );
+
+        return adsCommentDtoMapper.toDto(
+            commentRepository.save(commentEntity)
         );
     }
 
-    public AdsCommentDto findById(long adsId) {
-        return factory.createAdsComment(
-            LocalDateTime.of(2022, 12, 20, 20, 20),
-            adsId,
-            1L,
-            "Text"
-        );
+    public boolean deleteAdsComment(long userId, long adPk, long commentId) {
+        Optional<CommentEntity> commentOptional = commentRepository.findByIdAndAdsIdAndUserId(commentId, adPk, userId);
+
+        commentOptional.ifPresent(commentRepository::delete);
+
+        return commentOptional.isPresent();
     }
 
-    /**
-     * @TODO: Ads ads, AdsComment adsComment - заменить на entity
-     * @param adsDto
-     * @param adsCommentDto
-     * @param updatedAdsCommentDto
-     * @return
-     */
-    public boolean updateAdsComment(AdsDto adsDto, AdsCommentDto adsCommentDto, AdsCommentDto updatedAdsCommentDto) {
-        return false;
+    public AdsCommentDto getAdsComment(long userId, long adPk, long commentId) {
+        Optional<CommentEntity> commentOptional = commentRepository.findByIdAndAdsIdAndUserId(commentId, adPk, userId);
+
+        return commentOptional
+            .map(adsCommentDtoMapper::toDto)
+            .orElse(null);
+    }
+
+    public AdsCommentDto updateAdsComment(long userId, long adsId, long commentId, AdsCommentDto updatedAdsCommentDto) {
+        Optional<CommentEntity> commentOptional = commentRepository.findByIdAndAdsIdAndUserId(commentId, adsId, userId);
+
+        commentOptional.ifPresent(entity -> {
+            entity.setText(updatedAdsCommentDto.getText());
+
+            commentRepository.save(entity);
+        });
+
+        return commentOptional
+            .map(adsCommentDtoMapper::toDto)
+            .orElse(null);
     }
 }

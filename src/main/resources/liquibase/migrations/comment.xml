@@ -21,11 +21,7 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="price" type="int">
-                <constraints nullable="false"/>
-            </column>
-
-            <column name="createdAt" type="datetime">
+            <column name="created_at" type="datetime">
                 <constraints nullable="false"/>
             </column>
 

@@ -4,12 +4,12 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import ru.skypro.diplom.dto.ads.CreateAdsDto;
 import ru.skypro.diplom.entity.AdsEntity;
+import ru.skypro.diplom.entity.UserEntity;
 
 @Mapper(componentModel = "spring")
 public interface CreateAdsDtoMapper {
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    AdsEntity toModel(CreateAdsDto dto);
+    AdsEntity toModel(CreateAdsDto dto, UserEntity user);
 
     @Mapping(source = "id", target = "pk")
     CreateAdsDto toDto(AdsEntity entity);

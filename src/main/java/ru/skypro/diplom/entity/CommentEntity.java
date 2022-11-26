@@ -6,7 +6,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "comment")
+@Table(name = "comment", schema = "public")
 @Data
 public class CommentEntity {
     @Id

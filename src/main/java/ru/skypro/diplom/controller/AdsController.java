@@ -11,7 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.diplom.dto.ads.*;
 import ru.skypro.diplom.service.AdsService;
 
-import java.util.Optional;
+import javax.servlet.http.HttpServletResponse;
 
 
 @RestController
@@ -92,16 +92,18 @@ public class AdsController {
             @ApiResponse(responseCode = "204", content = @Content())
         }
     )
-    public Optional<HttpStatus> removeAds(
-        @PathVariable("id") long adsId
+    public void removeAds(
+        @PathVariable("id") long adsId,
+        HttpServletResponse response
     ) {
-        boolean isRemoveAds = adsService.removeAds(adsId);
+        boolean isRemoveAds = adsService.removeAds(adsId, 4);
 
         if (!isRemoveAds) {
-            return Optional.empty();
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
         }
 
-        return Optional.of(HttpStatus.NO_CONTENT);
+        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 
     @GetMapping(value = "/{id}")
@@ -115,7 +117,7 @@ public class AdsController {
     public FullAdsDto getAds(
         @PathVariable("id") long adsId
     ) {
-        FullAdsDto fullAdsDto = adsService.getAds(adsId);
+        FullAdsDto fullAdsDto = adsService.getAds(adsId, 2L);
 
         if (null == fullAdsDto) {
             throw new ResponseStatusException(
@@ -140,20 +142,14 @@ public class AdsController {
         @PathVariable("id") long adsId,
         @RequestBody AdsDto updatedAdsDto
     ) {
-        AdsDto adsDto = adsService.findById(adsId);
-        if (null == adsDto) {
-            throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND
-            );
-        }
+        AdsDto updatedAds = adsService.updateAds(2L, adsId, updatedAdsDto);
 
-        boolean updateResult = adsService.updateAds(adsDto, updatedAdsDto);
-        if (!updateResult) {
+        if (null == updatedAds) {
             throw new ResponseStatusException(
                 HttpStatus.NO_CONTENT
             );
         }
 
-        return updatedAdsDto;
+        return updatedAds;
     }
 }

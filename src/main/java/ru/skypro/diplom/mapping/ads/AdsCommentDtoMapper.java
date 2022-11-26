@@ -7,12 +7,18 @@ import ru.skypro.diplom.entity.AdsEntity;
 import ru.skypro.diplom.entity.CommentEntity;
 import ru.skypro.diplom.entity.UserEntity;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface AdsCommentDtoMapper {
     @Mapping(source = "dto.pk", target = "id")
+    @Mapping(source = "user", target = "user")
+    @Mapping(source = "ads", target = "ads")
     CommentEntity toModel(AdsCommentDto dto, UserEntity user, AdsEntity ads);
 
     @Mapping(source = "id", target = "pk")
     @Mapping(source = "entity.user.id", target = "author")
     AdsCommentDto toDto(CommentEntity entity);
+
+    List<AdsCommentDto> toAdsDtoList(List<CommentEntity> commentList);
 }

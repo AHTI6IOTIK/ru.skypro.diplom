@@ -8,11 +8,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import ru.skypro.diplom.dto.ads.AdsDto;
 import ru.skypro.diplom.dto.ads.AdsCommentDto;
 import ru.skypro.diplom.dto.ads.ResponseWrapperAdsCommentDto;
 import ru.skypro.diplom.service.AdsCommentService;
 import ru.skypro.diplom.service.AdsService;
+
+import javax.servlet.http.HttpServletResponse;
 
 @RestController
 @CrossOrigin(value = "http://localhost:3000")
@@ -69,12 +70,13 @@ public class AdsCommentController {
         @PathVariable("ad_pk") long adPk,
         @RequestBody AdsCommentDto comment
     ) {
-        AdsDto adsDto = adsService.findById(adPk);
-        if (null == adsDto) {
+        AdsCommentDto adsComment = adsCommentService.addAdsComment(adPk, comment);
+
+        if (null == adsComment) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
-        return adsCommentService.addAdsComment(adPk, comment);
+        return adsComment;
     }
 
     @DeleteMapping(value = "/{ad_pk}/comment/{id}")
@@ -82,20 +84,17 @@ public class AdsCommentController {
         summary = "deleteAdsComment",
         responses = @ApiResponse(responseCode = "204", content = @Content())
     )
-    public HttpStatus deleteAdsComments(
+    public void deleteAdsComments(
         @PathVariable("ad_pk") long adPk,
-        @PathVariable("id") long commentId
+        @PathVariable("id") long commentId,
+        HttpServletResponse response
     ) {
-        AdsDto adsDto = adsService.findById(adPk);
-        if (null == adsDto) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if (adsCommentService.deleteAdsComment(2L, adPk, commentId)) {
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            return;
         }
 
-        if (adsCommentService.deleteAdsComment(adPk, commentId)) {
-            return HttpStatus.NO_CONTENT;
-        }
-
-        return HttpStatus.FORBIDDEN;
+        response.setStatus(HttpServletResponse.SC_OK);
     }
 
     @GetMapping(value = "/{ad_pk}/comment/{id}")
@@ -110,7 +109,7 @@ public class AdsCommentController {
         @PathVariable("ad_pk") long adPk,
         @PathVariable("id") long commentId
     ) {
-        AdsCommentDto adsCommentDto = adsCommentService.getAdsComment(adPk, commentId);
+        AdsCommentDto adsCommentDto = adsCommentService.getAdsComment(2L, adPk, commentId);
 
         if (null == adsCommentDto) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -125,7 +124,6 @@ public class AdsCommentController {
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "comment"),
         responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "204", content = @Content()),
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
@@ -134,17 +132,17 @@ public class AdsCommentController {
         @PathVariable("id") long commentId,
         @RequestBody AdsCommentDto updatedAdsCommentDto
     ) {
-        AdsDto adsDto = adsService.findById(adPk);
-        AdsCommentDto adsCommentDto = adsCommentService.findById(commentId);
-        if (null == adsDto || null == adsCommentDto) {
+        AdsCommentDto updatedDto = adsCommentService.updateAdsComment(
+            3L,
+            adPk,
+            commentId,
+            updatedAdsCommentDto
+        );
+
+        if (null == updatedDto) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
-        boolean updateStatus = adsCommentService.updateAdsComment(adsDto, adsCommentDto, updatedAdsCommentDto);
-        if (!updateStatus) {
-            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
-        }
-
-        return updatedAdsCommentDto;
+        return updatedDto;
     }
 }
