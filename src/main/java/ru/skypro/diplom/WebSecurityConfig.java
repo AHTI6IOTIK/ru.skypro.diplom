@@ -14,11 +14,11 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class WebSecurityConfig {
 
     private static final String[] AUTH_WHITELIST = {
-            "/swagger-resources/**",
-            "/swagger-ui.html",
-            "/v3/api-docs",
-            "/webjars/**",
-            "/login", "/register"
+        "/swagger-resources/**",
+        "/swagger-ui.html",
+        "/v3/api-docs",
+        "/webjars/**",
+        "/login", "/register"
     };
 
     @Bean
@@ -34,17 +34,22 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
-                .authorizeHttpRequests((authz) ->
-                        authz
-                                .mvcMatchers(AUTH_WHITELIST).permitAll()
-                                .mvcMatchers("/ads/**", "/users/**").authenticated()
+            .csrf()
+            .disable()
+            .authorizeHttpRequests((authz) ->
+                authz
+                    .mvcMatchers(AUTH_WHITELIST)
+                    .permitAll()
+                    .mvcMatchers(
+                        "/ads/**",
+                        "/users/**"
+                    )
+                    .authenticated()
 
-                )
-                .cors().disable()
-                .httpBasic(withDefaults());
+            )
+            .cors()
+            .disable()
+            .httpBasic(withDefaults());
         return http.build();
     }
-
-
 }

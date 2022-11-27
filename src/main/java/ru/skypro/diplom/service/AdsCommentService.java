@@ -7,10 +7,14 @@ import ru.skypro.diplom.dto.ads.AdsCommentDto;
 import ru.skypro.diplom.dto.ads.ResponseWrapperAdsCommentDto;
 import ru.skypro.diplom.entity.AdsEntity;
 import ru.skypro.diplom.entity.CommentEntity;
+import ru.skypro.diplom.entity.UserEntity;
+import ru.skypro.diplom.exception.NotFoundCommentException;
+import ru.skypro.diplom.exception.UpdateCommentForbidden;
 import ru.skypro.diplom.mapping.ads.AdsCommentDtoMapper;
 import ru.skypro.diplom.repository.AdsRepository;
 import ru.skypro.diplom.repository.CommentRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,15 +23,18 @@ public class AdsCommentService {
     private final AdsRepository adsRepository;
     private final CommentRepository commentRepository;
     private final AdsCommentDtoMapper adsCommentDtoMapper;
+    private final UsersService usersService;
 
     public AdsCommentService(
         AdsRepository adsRepository,
         CommentRepository commentRepository,
-        AdsCommentDtoMapper adsCommentDtoMapper
+        AdsCommentDtoMapper adsCommentDtoMapper,
+        UsersService usersService
     ) {
         this.adsRepository = adsRepository;
         this.commentRepository = commentRepository;
         this.adsCommentDtoMapper = adsCommentDtoMapper;
+        this.usersService = usersService;
     }
 
     public ResponseWrapperAdsCommentDto getAdsComments(long adPk) {
@@ -48,14 +55,20 @@ public class AdsCommentService {
         return wrapperAdsComment;
     }
 
-    public AdsCommentDto addAdsComment(long adPk, AdsCommentDto comment) {
-        Optional<AdsEntity> optionalAds = adsRepository.findByIdAndUserId(adPk, comment.getAuthor());
+    public AdsCommentDto addAdsComment(
+        long adPk,
+        String userLogin,
+        AdsCommentDto comment
+    ) {
+        Optional<AdsEntity> optionalAds = adsRepository.findById(adPk);
 
         AdsEntity adsEntity = optionalAds.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        UserEntity user = usersService.getUserByLogin(userLogin);
 
+        comment.setCreatedAt(LocalDateTime.now());
         CommentEntity commentEntity = adsCommentDtoMapper.toModel(
             comment,
-            adsEntity.getUser(),
+            user,
             adsEntity
         );
 
@@ -64,24 +77,47 @@ public class AdsCommentService {
         );
     }
 
-    public boolean deleteAdsComment(long userId, long adPk, long commentId) {
-        Optional<CommentEntity> commentOptional = commentRepository.findByIdAndAdsIdAndUserId(commentId, adPk, userId);
+    public boolean deleteAdsComment(
+        String userLogin,
+        long adPk,
+        long commentId
+    ) {
+        CommentEntity comment = commentRepository.findByIdAndAdsIdAndUserEmail(
+            commentId,
+            adPk,
+            userLogin
+        ).orElseThrow(NotFoundCommentException::new);
 
-        commentOptional.ifPresent(commentRepository::delete);
+        commentRepository.delete(comment);
 
-        return commentOptional.isPresent();
+        return true;
     }
 
-    public AdsCommentDto getAdsComment(long userId, long adPk, long commentId) {
-        Optional<CommentEntity> commentOptional = commentRepository.findByIdAndAdsIdAndUserId(commentId, adPk, userId);
+    public AdsCommentDto getAdsComment(
+        long adPk,
+        long commentId
+    ) {
+        Optional<CommentEntity> commentOptional = commentRepository.findByIdAndAdsId(
+            commentId,
+            adPk
+        );
 
         return commentOptional
             .map(adsCommentDtoMapper::toDto)
             .orElse(null);
     }
 
-    public AdsCommentDto updateAdsComment(long userId, long adsId, long commentId, AdsCommentDto updatedAdsCommentDto) {
-        Optional<CommentEntity> commentOptional = commentRepository.findByIdAndAdsIdAndUserId(commentId, adsId, userId);
+    public AdsCommentDto updateAdsComment(
+        String userLogin,
+        long adsId,
+        long commentId,
+        AdsCommentDto updatedAdsCommentDto
+    ) {
+        Optional<CommentEntity> commentOptional = commentRepository.findByIdAndAdsIdAndUserEmail(
+            commentId,
+            adsId,
+            userLogin
+        );
 
         commentOptional.ifPresent(entity -> {
             entity.setText(updatedAdsCommentDto.getText());
@@ -91,6 +127,6 @@ public class AdsCommentService {
 
         return commentOptional
             .map(adsCommentDtoMapper::toDto)
-            .orElse(null);
+            .orElseThrow(UpdateCommentForbidden::new);
     }
 }

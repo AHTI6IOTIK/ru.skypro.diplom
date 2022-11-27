@@ -7,7 +7,6 @@ import ru.skypro.diplom.entity.UserEntity;
 
 @Mapper(componentModel = "spring")
 public interface CreateUserDtoMapper {
-    @Mapping(target = "password", ignore = true)
     @Mapping(target = "id", ignore = true)
     UserEntity toModel(CreateUserDto dto);
     CreateUserDto toDto(UserEntity entity);

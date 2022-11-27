@@ -6,11 +6,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.diplom.dto.ads.*;
 import ru.skypro.diplom.service.AdsService;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 
 
@@ -38,6 +41,7 @@ public class AdsController {
         summary = "getALLAds",
         responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true)
     )
+    @PreAuthorize("isAnonymous")
     public ResponseWrapperAdsDto getAllAds() {
         return adsService.getAllAds();
     }
@@ -51,8 +55,12 @@ public class AdsController {
             @ApiResponse(responseCode = "201", content = @Content())
         }
     )
-    public AdsDto createAds(@RequestBody CreateAdsDto createAdsDto) {
-        AdsDto adsDto = adsService.createAds(createAdsDto);
+    @RolesAllowed({"ROLE_USER"})
+    public AdsDto createAds(
+        @RequestBody CreateAdsDto createAdsDto,
+        Authentication authentication
+    ) {
+        AdsDto adsDto = adsService.createAds(authentication.getName(), createAdsDto);
 
         if (null == adsDto) {
             throw new ResponseStatusException(HttpStatus.CREATED);
@@ -69,41 +77,29 @@ public class AdsController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
+    @RolesAllowed({"ROLE_USER"})
     public ResponseWrapperAdsDto getMyAds(
         @RequestParam(required = false) boolean authenticated,
         @RequestParam(required = false, name = "authorities[0].authority") String authority,
         @RequestParam(required = false) Object credentials,
         @RequestParam(required = false) Object details,
-        @RequestParam(required = false) Object principal
+        @RequestParam(required = false) Object principal,
+        Authentication authentication
     ) {
-        ResponseWrapperAdsDto ads = adsService.getMyAds(authenticated, authority, credentials, details, principal);
+        ResponseWrapperAdsDto ads = adsService.getMyAds(
+            authentication.getName(),
+            authenticated,
+            authority,
+            credentials,
+            details,
+            principal
+        );
 
         if (null == ads) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
         return ads;
-    }
-
-    @DeleteMapping(value = "/{id}")
-    @Operation(
-        summary = "removeAds",
-        responses = {
-            @ApiResponse(responseCode = "204", content = @Content())
-        }
-    )
-    public void removeAds(
-        @PathVariable("id") long adsId,
-        HttpServletResponse response
-    ) {
-        boolean isRemoveAds = adsService.removeAds(adsId, 4);
-
-        if (!isRemoveAds) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 
     @GetMapping(value = "/{id}")
@@ -114,10 +110,13 @@ public class AdsController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
+    @RolesAllowed({"ROLE_USER"})
     public FullAdsDto getAds(
         @PathVariable("id") long adsId
     ) {
-        FullAdsDto fullAdsDto = adsService.getAds(adsId, 2L);
+        FullAdsDto fullAdsDto = adsService.getAds(
+            adsId
+        );
 
         if (null == fullAdsDto) {
             throw new ResponseStatusException(
@@ -126,6 +125,32 @@ public class AdsController {
         }
 
         return fullAdsDto;
+    }
+
+    @DeleteMapping(value = "/{id}")
+    @Operation(
+        summary = "removeAds",
+        responses = {
+            @ApiResponse(responseCode = "204", content = @Content())
+        }
+    )
+    @RolesAllowed({"ROLE_USER"})
+    public void removeAds(
+        @PathVariable("id") long adsId,
+        Authentication authentication,
+        HttpServletResponse response
+    ) {
+        boolean isRemoveAds = adsService.removeAds(
+            adsId,
+            authentication.getName()
+        );
+
+        if (!isRemoveAds) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 
     @PatchMapping(value = "/{id}")
@@ -138,11 +163,17 @@ public class AdsController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
+    @RolesAllowed({"ROLE_USER"})
     public AdsDto updateAds(
         @PathVariable("id") long adsId,
-        @RequestBody AdsDto updatedAdsDto
+        @RequestBody AdsDto updatedAdsDto,
+        Authentication authentication
     ) {
-        AdsDto updatedAds = adsService.updateAds(2L, adsId, updatedAdsDto);
+        AdsDto updatedAds = adsService.updateAds(
+            authentication.getName(),
+            adsId,
+            updatedAdsDto
+        );
 
         if (null == updatedAds) {
             throw new ResponseStatusException(

@@ -6,13 +6,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.diplom.dto.ads.AdsCommentDto;
 import ru.skypro.diplom.dto.ads.ResponseWrapperAdsCommentDto;
+import ru.skypro.diplom.exception.NotFoundCommentException;
+import ru.skypro.diplom.exception.UpdateCommentForbidden;
 import ru.skypro.diplom.service.AdsCommentService;
-import ru.skypro.diplom.service.AdsService;
 
+import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletResponse;
 
 @RestController
@@ -26,14 +29,11 @@ import javax.servlet.http.HttpServletResponse;
     }
 )
 public class AdsCommentController {
-    private final AdsService adsService;
     private final AdsCommentService adsCommentService;
 
     public AdsCommentController(
-        AdsService service,
         AdsCommentService adsCommentService
     ) {
-        this.adsService = service;
         this.adsCommentService = adsCommentService;
     }
 
@@ -45,6 +45,7 @@ public class AdsCommentController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
+    @RolesAllowed({"ROLE_USER"})
     public ResponseWrapperAdsCommentDto getAdsComments(
         @PathVariable("ad_pk") long adPk
     ) {
@@ -66,11 +67,17 @@ public class AdsCommentController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
+    @RolesAllowed({"ROLE_USER"})
     public AdsCommentDto createAdsComments(
         @PathVariable("ad_pk") long adPk,
-        @RequestBody AdsCommentDto comment
+        @RequestBody AdsCommentDto comment,
+        Authentication authentication
     ) {
-        AdsCommentDto adsComment = adsCommentService.addAdsComment(adPk, comment);
+        AdsCommentDto adsComment = adsCommentService.addAdsComment(
+            adPk,
+            authentication.getName(),
+            comment
+        );
 
         if (null == adsComment) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -84,38 +91,27 @@ public class AdsCommentController {
         summary = "deleteAdsComment",
         responses = @ApiResponse(responseCode = "204", content = @Content())
     )
+    @RolesAllowed({"ROLE_USER"})
     public void deleteAdsComments(
         @PathVariable("ad_pk") long adPk,
         @PathVariable("id") long commentId,
+        Authentication authentication,
         HttpServletResponse response
     ) {
-        if (adsCommentService.deleteAdsComment(2L, adPk, commentId)) {
+        try {
+            adsCommentService.deleteAdsComment(
+                authentication.getName(),
+                adPk,
+                commentId
+            );
+
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        } catch (NotFoundCommentException exception) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         response.setStatus(HttpServletResponse.SC_OK);
-    }
-
-    @GetMapping(value = "/{ad_pk}/comment/{id}")
-    @Operation(
-        summary = "getAdsComment",
-        responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "404", content = @Content())
-        }
-    )
-    public AdsCommentDto getAdsComment(
-        @PathVariable("ad_pk") long adPk,
-        @PathVariable("id") long commentId
-    ) {
-        AdsCommentDto adsCommentDto = adsCommentService.getAdsComment(2L, adPk, commentId);
-
-        if (null == adsCommentDto) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-
-        return adsCommentDto;
     }
 
     @PatchMapping(value = "/{ad_pk}/comment/{id}")
@@ -127,22 +123,56 @@ public class AdsCommentController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
+    @RolesAllowed({"ROLE_USER"})
     public AdsCommentDto updateAdsComment(
         @PathVariable("ad_pk") long adPk,
         @PathVariable("id") long commentId,
-        @RequestBody AdsCommentDto updatedAdsCommentDto
+        @RequestBody AdsCommentDto updatedAdsCommentDto,
+        Authentication authentication
     ) {
-        AdsCommentDto updatedDto = adsCommentService.updateAdsComment(
-            3L,
+        try {
+            AdsCommentDto updatedDto = adsCommentService.updateAdsComment(
+                authentication.getName(),
+                adPk,
+                commentId,
+                updatedAdsCommentDto
+            );
+
+            if (null == updatedDto) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+
+            return updatedDto;
+        } catch (UpdateCommentForbidden e) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                e.getMessage()
+            );
+        }
+    }
+
+    @GetMapping(value = "/{ad_pk}/comment/{id}")
+    @Operation(
+        summary = "getAdsComment",
+        responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "404", content = @Content())
+        }
+    )
+    @RolesAllowed({"ROLE_USER"})
+    public AdsCommentDto getAdsComment(
+        @PathVariable("ad_pk") long adPk,
+        @PathVariable("id") long commentId
+    ) {
+        AdsCommentDto adsCommentDto = adsCommentService.getAdsComment(
             adPk,
-            commentId,
-            updatedAdsCommentDto
+            commentId
         );
 
-        if (null == updatedDto) {
+        if (null == adsCommentDto) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
-        return updatedDto;
+        return adsCommentDto;
     }
 }

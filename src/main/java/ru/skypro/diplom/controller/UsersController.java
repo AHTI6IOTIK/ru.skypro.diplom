@@ -6,14 +6,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.diplom.dto.auth.NewPasswordDto;
 import ru.skypro.diplom.dto.profile.CreateUserDto;
 import ru.skypro.diplom.dto.profile.ResponseWrapperUserDto;
 import ru.skypro.diplom.dto.profile.UserDto;
+import ru.skypro.diplom.exception.CurrentPasswordNotEqualsException;
 import ru.skypro.diplom.exception.UserAlreadyCreatedException;
+import ru.skypro.diplom.exception.UserNotFoundException;
 import ru.skypro.diplom.service.UsersService;
+
+import javax.annotation.security.RolesAllowed;
 
 @RestController
 @CrossOrigin(value = "http://localhost:3000")
@@ -32,7 +37,7 @@ public class UsersController {
         this.usersService = usersService;
     }
 
-    @PostMapping("/add")
+    @PostMapping
     @Operation(
         summary = "addUser",
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "user"),
@@ -42,6 +47,7 @@ public class UsersController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
+    @RolesAllowed("ROLE_ADMIN")
     public CreateUserDto addUser(
         @RequestBody CreateUserDto updatedUserDto
     ) {
@@ -60,13 +66,13 @@ public class UsersController {
     @GetMapping
     @Operation(
         summary = "getUsers",
-        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "user"),
         responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "201", content = @Content()),
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
+    @RolesAllowed("ROLE_ADMIN")
     public ResponseWrapperUserDto getUsers() {
         ResponseWrapperUserDto wrapperUserDto = usersService.getUsers();
         if (null == wrapperUserDto) {
@@ -76,7 +82,27 @@ public class UsersController {
         return wrapperUserDto;
     }
 
-    @PatchMapping("/{userId}")
+    @GetMapping("/me")
+    @Operation(
+        summary = "getMe",
+        responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "201", content = @Content()),
+            @ApiResponse(responseCode = "404", content = @Content())
+        }
+    )
+    @RolesAllowed("ROLE_USER")
+    public UserDto getMe(
+        Authentication authentication
+    ) {
+        try {
+            return usersService.getMeByLogin(authentication.getName());
+        } catch (UserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @PatchMapping("/me")
     @Operation(
         summary = "updateUser",
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "user"),
@@ -86,21 +112,19 @@ public class UsersController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
+    @RolesAllowed({ "ROLE_USER"})
     public UserDto updateUser(
-        @PathVariable long userId,
-        @RequestBody UserDto updatedUser
+        @RequestBody UserDto updatedUser,
+        Authentication authentication
     ) {
-        UserDto user = usersService.findById(userId);
-        if (null == user) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        try {
+            return usersService.updateUser(
+                authentication.getName(),
+                updatedUser
+            );
+        } catch (UserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
-
-        boolean isUpdated = usersService.updateUser(userId, user, updatedUser);
-        if (!isUpdated) {
-            throw new ResponseStatusException(HttpStatus.NO_CONTENT);
-        }
-
-        return updatedUser;
     }
 
     @PostMapping("/set_password")
@@ -113,21 +137,26 @@ public class UsersController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
+    @RolesAllowed({ "ROLE_USER"})
     public NewPasswordDto setPassword(
-        @RequestBody NewPasswordDto newPasswordDto
+        @RequestBody NewPasswordDto newPasswordDto,
+        Authentication authentication
     ) {
-        boolean isUpdated = usersService.setPassword(newPasswordDto);
-        if (!isUpdated) {
-            throw new ResponseStatusException(HttpStatus.CREATED);
+        try {
+            return usersService.changePassword(
+                authentication.getName(),
+                newPasswordDto
+            );
+        } catch (CurrentPasswordNotEqualsException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        } catch (UserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
-
-        return newPasswordDto;
     }
 
     @GetMapping("/{id}")
     @Operation(
         summary = "getUser",
-        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "newPassword"),
         responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "404", content = @Content())
@@ -136,11 +165,10 @@ public class UsersController {
     public UserDto getUser(
         @PathVariable("id") long userId
     ) {
-        UserDto user = usersService.findById(userId);
-        if (null == user) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        try {
+            return usersService.findById(userId);
+        } catch (UserNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
-
-        return user;
     }
 }
