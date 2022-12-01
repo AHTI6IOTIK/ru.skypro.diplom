@@ -9,8 +9,7 @@ import javax.persistence.*;
 @Data
 public class AdsEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="ads_id_seq")
-    @SequenceGenerator(name="ads_id_seq", sequenceName="ads_id_seq", allocationSize=1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne

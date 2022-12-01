@@ -76,7 +76,7 @@ public class AdsService {
         ResponseWrapperAdsDto wrapperAds = new ResponseWrapperAdsDto();
 
         wrapperAds.setCount(myAds.size());
-        wrapperAds.setResult(
+        wrapperAds.setResults(
             adsDtoMapper.toAdsDtoList(myAds)
                 .toArray(new AdsDto[0])
         );
@@ -93,7 +93,7 @@ public class AdsService {
         }
 
         ResponseWrapperAdsDto wrapperAds = new ResponseWrapperAdsDto();
-        wrapperAds.setResult(
+        wrapperAds.setResults(
             adsDtoMapper.toAdsDtoList(adsList)
                 .toArray(new AdsDto[0])
         );

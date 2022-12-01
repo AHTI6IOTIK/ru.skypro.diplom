@@ -41,7 +41,6 @@ public class AdsController {
         summary = "getALLAds",
         responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true)
     )
-    @PreAuthorize("isAnonymous")
     public ResponseWrapperAdsDto getAllAds() {
         return adsService.getAllAds();
     }
@@ -55,7 +54,7 @@ public class AdsController {
             @ApiResponse(responseCode = "201", content = @Content())
         }
     )
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed({"USER"})
     public AdsDto createAds(
         @RequestBody CreateAdsDto createAdsDto,
         Authentication authentication
@@ -77,7 +76,7 @@ public class AdsController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed({"USER"})
     public ResponseWrapperAdsDto getMyAds(
         @RequestParam(required = false) boolean authenticated,
         @RequestParam(required = false, name = "authorities[0].authority") String authority,
@@ -110,7 +109,7 @@ public class AdsController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed({"USER"})
     public FullAdsDto getAds(
         @PathVariable("id") long adsId
     ) {
@@ -134,7 +133,7 @@ public class AdsController {
             @ApiResponse(responseCode = "204", content = @Content())
         }
     )
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed({"USER"})
     public void removeAds(
         @PathVariable("id") long adsId,
         Authentication authentication,
@@ -163,7 +162,7 @@ public class AdsController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed({"USER"})
     public AdsDto updateAds(
         @PathVariable("id") long adsId,
         @RequestBody AdsDto updatedAdsDto,

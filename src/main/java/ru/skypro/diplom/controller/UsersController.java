@@ -47,7 +47,7 @@ public class UsersController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed("ROLE_ADMIN")
+    @RolesAllowed("ADMIN")
     public CreateUserDto addUser(
         @RequestBody CreateUserDto updatedUserDto
     ) {
@@ -72,7 +72,7 @@ public class UsersController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed("ROLE_ADMIN")
+    @RolesAllowed("ADMIN")
     public ResponseWrapperUserDto getUsers() {
         ResponseWrapperUserDto wrapperUserDto = usersService.getUsers();
         if (null == wrapperUserDto) {
@@ -91,7 +91,7 @@ public class UsersController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed("ROLE_USER")
+    @RolesAllowed("USER")
     public UserDto getMe(
         Authentication authentication
     ) {
@@ -112,7 +112,7 @@ public class UsersController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed({ "ROLE_USER"})
+    @RolesAllowed({"USER"})
     public UserDto updateUser(
         @RequestBody UserDto updatedUser,
         Authentication authentication
@@ -137,7 +137,7 @@ public class UsersController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed({ "ROLE_USER"})
+    @RolesAllowed({"USER"})
     public NewPasswordDto setPassword(
         @RequestBody NewPasswordDto newPasswordDto,
         Authentication authentication

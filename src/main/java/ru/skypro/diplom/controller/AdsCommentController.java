@@ -45,7 +45,7 @@ public class AdsCommentController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed({"USER"})
     public ResponseWrapperAdsCommentDto getAdsComments(
         @PathVariable("ad_pk") long adPk
     ) {
@@ -67,7 +67,7 @@ public class AdsCommentController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed({"USER"})
     public AdsCommentDto createAdsComments(
         @PathVariable("ad_pk") long adPk,
         @RequestBody AdsCommentDto comment,
@@ -91,7 +91,7 @@ public class AdsCommentController {
         summary = "deleteAdsComment",
         responses = @ApiResponse(responseCode = "204", content = @Content())
     )
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed({"USER"})
     public void deleteAdsComments(
         @PathVariable("ad_pk") long adPk,
         @PathVariable("id") long commentId,
@@ -123,7 +123,7 @@ public class AdsCommentController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed({"USER"})
     public AdsCommentDto updateAdsComment(
         @PathVariable("ad_pk") long adPk,
         @PathVariable("id") long commentId,
@@ -159,7 +159,7 @@ public class AdsCommentController {
             @ApiResponse(responseCode = "404", content = @Content())
         }
     )
-    @RolesAllowed({"ROLE_USER"})
+    @RolesAllowed({"USER"})
     public AdsCommentDto getAdsComment(
         @PathVariable("ad_pk") long adPk,
         @PathVariable("id") long commentId
