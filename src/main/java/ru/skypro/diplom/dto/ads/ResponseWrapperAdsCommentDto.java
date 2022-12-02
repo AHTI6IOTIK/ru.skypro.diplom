@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class ResponseWrapperAdsCommentDto {
     private long count;
-    private AdsCommentDto[] result;
+    private AdsCommentDto[] results;
 }

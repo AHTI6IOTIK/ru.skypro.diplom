@@ -17,7 +17,7 @@ public interface AdsCommentDtoMapper {
     CommentEntity toModel(AdsCommentDto dto, UserEntity user, AdsEntity ads);
 
     @Mapping(source = "id", target = "pk")
-    @Mapping(source = "entity.user.id", target = "author")
+    @Mapping(source = "entity.user.id", target = "author_id")
     AdsCommentDto toDto(CommentEntity entity);
 
     List<AdsCommentDto> toAdsDtoList(List<CommentEntity> commentList);

@@ -1,6 +1,7 @@
 package ru.skypro.diplom.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.skypro.diplom.entity.CommentEntity;
 
 import java.util.List;
@@ -19,4 +20,7 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
         long adsId,
         String email
     );
+
+    @Transactional
+    void deleteByAdsId(Long adsId);
 }

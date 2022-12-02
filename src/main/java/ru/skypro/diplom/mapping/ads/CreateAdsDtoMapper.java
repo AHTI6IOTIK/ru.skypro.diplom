@@ -11,6 +11,5 @@ public interface CreateAdsDtoMapper {
     @Mapping(target = "id", ignore = true)
     AdsEntity toModel(CreateAdsDto dto, UserEntity user);
 
-    @Mapping(source = "id", target = "pk")
     CreateAdsDto toDto(AdsEntity entity);
 }

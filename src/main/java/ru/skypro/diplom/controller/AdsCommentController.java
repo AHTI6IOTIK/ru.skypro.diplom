@@ -37,7 +37,7 @@ public class AdsCommentController {
         this.adsCommentService = adsCommentService;
     }
 
-    @GetMapping(value = "/{ad_pk}/comment")
+    @GetMapping(value = "/{ad_pk}/comments")
     @Operation(
         summary = "getAdsComments",
         responses = {
@@ -57,7 +57,7 @@ public class AdsCommentController {
         return ads;
     }
 
-    @PostMapping(value = "/{ad_pk}/comment")
+    @PostMapping(value = "/{ad_pk}/comments")
     @Operation(
         summary = "addAdsComments",
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "comment"),
@@ -86,7 +86,7 @@ public class AdsCommentController {
         return adsComment;
     }
 
-    @DeleteMapping(value = "/{ad_pk}/comment/{id}")
+    @DeleteMapping(value = "/{ad_pk}/comments/{id}")
     @Operation(
         summary = "deleteAdsComment",
         responses = @ApiResponse(responseCode = "204", content = @Content())
@@ -114,7 +114,7 @@ public class AdsCommentController {
         response.setStatus(HttpServletResponse.SC_OK);
     }
 
-    @PatchMapping(value = "/{ad_pk}/comment/{id}")
+    @PatchMapping(value = "/{ad_pk}/comments/{id}")
     @Operation(
         summary = "updateAdsComment",
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "comment"),
@@ -151,7 +151,7 @@ public class AdsCommentController {
         }
     }
 
-    @GetMapping(value = "/{ad_pk}/comment/{id}")
+    @GetMapping(value = "/{ad_pk}/comments/{id}")
     @Operation(
         summary = "getAdsComment",
         responses = {

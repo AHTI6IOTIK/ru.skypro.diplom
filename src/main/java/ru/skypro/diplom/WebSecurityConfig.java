@@ -1,7 +1,9 @@
 package ru.skypro.diplom;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -50,18 +52,16 @@ public class WebSecurityConfig {
             .disable()
             .authorizeHttpRequests((authz) ->
                 authz
-                    .mvcMatchers(AUTH_WHITELIST)
-                    .permitAll()
+                    .antMatchers(HttpMethod.OPTIONS).permitAll()
+                    .mvcMatchers(AUTH_WHITELIST).permitAll()
                     .mvcMatchers(
                         "/ads/**",
                         "/users/**"
                     )
                     .authenticated()
-
             )
-            .cors()
-            .disable()
-            .httpBasic(withDefaults());
+            .httpBasic(withDefaults())
+            .cors();
         return http.build();
     }
 }

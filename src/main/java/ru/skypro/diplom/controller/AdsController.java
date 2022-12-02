@@ -6,9 +6,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.diplom.dto.ads.*;
 import ru.skypro.diplom.service.AdsService;
@@ -45,10 +46,12 @@ public class AdsController {
         return adsService.getAllAds();
     }
 
-    @PostMapping
+    @PostMapping(
+        consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE},
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
     @Operation(
         summary = "addAds",
-        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "createAds"),
         responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "201", content = @Content())
@@ -56,7 +59,8 @@ public class AdsController {
     )
     @RolesAllowed({"USER"})
     public AdsDto createAds(
-        @RequestBody CreateAdsDto createAdsDto,
+        @RequestPart(value = "properties") CreateAdsDto createAdsDto,
+        @RequestPart(value = "image") MultipartFile image,
         Authentication authentication
     ) {
         AdsDto adsDto = adsService.createAds(authentication.getName(), createAdsDto);

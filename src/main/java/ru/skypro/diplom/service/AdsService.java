@@ -17,6 +17,7 @@ public class AdsService {
 
     private final AdsRepository adsRepository;
     private final UsersService usersService;
+    private final AdsCommentService adsCommentService;
 
     private final AdsDtoMapper adsDtoMapper;
     private final CreateAdsDtoMapper createAdsDtoMapper;
@@ -27,13 +28,15 @@ public class AdsService {
         AdsDtoMapper adsDtoMapper,
         CreateAdsDtoMapper createAdsDtoMapper,
         FullAdsDtoMapper fullAdsDtoMapper,
-        UsersService usersService
+        UsersService usersService,
+        AdsCommentService adsCommentService
     ) {
         this.adsRepository = adsRepository;
         this.adsDtoMapper = adsDtoMapper;
         this.createAdsDtoMapper = createAdsDtoMapper;
         this.fullAdsDtoMapper = fullAdsDtoMapper;
         this.usersService = usersService;
+        this.adsCommentService = adsCommentService;
     }
 
     public AdsDto createAds(
@@ -111,7 +114,11 @@ public class AdsService {
             adsId,
             userLogin
         );
-        optionalAds.ifPresent(adsRepository::delete);
+
+        optionalAds.ifPresent((adsEntity -> {
+            adsCommentService.deleteAdsCommentByDeletedAds(adsEntity.getId());
+            adsRepository.delete(adsEntity);
+        }));
 
         return optionalAds.isPresent();
     }

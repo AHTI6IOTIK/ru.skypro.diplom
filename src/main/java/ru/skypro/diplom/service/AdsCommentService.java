@@ -8,7 +8,7 @@ import ru.skypro.diplom.dto.ads.ResponseWrapperAdsCommentDto;
 import ru.skypro.diplom.entity.AdsEntity;
 import ru.skypro.diplom.entity.CommentEntity;
 import ru.skypro.diplom.entity.UserEntity;
-import ru.skypro.diplom.exception.NotFoundCommentException;
+import ru.skypro.diplom.exception.CommentNotFoundOrNoRightsEditException;
 import ru.skypro.diplom.exception.UpdateCommentForbidden;
 import ru.skypro.diplom.mapping.ads.AdsCommentDtoMapper;
 import ru.skypro.diplom.repository.AdsRepository;
@@ -47,7 +47,7 @@ public class AdsCommentService {
         ResponseWrapperAdsCommentDto wrapperAdsComment = new ResponseWrapperAdsCommentDto();
 
         wrapperAdsComment.setCount(commentList.size());
-        wrapperAdsComment.setResult(
+        wrapperAdsComment.setResults(
             adsCommentDtoMapper.toAdsDtoList(commentList)
                 .toArray(new AdsCommentDto[0])
         );
@@ -86,7 +86,7 @@ public class AdsCommentService {
             commentId,
             adPk,
             userLogin
-        ).orElseThrow(NotFoundCommentException::new);
+        ).orElseThrow(CommentNotFoundOrNoRightsEditException::new);
 
         commentRepository.delete(comment);
 
@@ -128,5 +128,9 @@ public class AdsCommentService {
         return commentOptional
             .map(adsCommentDtoMapper::toDto)
             .orElseThrow(UpdateCommentForbidden::new);
+    }
+
+    public void deleteAdsCommentByDeletedAds(Long adsId) {
+        commentRepository.deleteByAdsId(adsId);
     }
 }
