@@ -138,7 +138,7 @@ public class AdsService {
     public AdsDto updateAds(
         String userLogin,
         long adsId,
-        AdsDto updatedAdsDto
+        CreateAdsDto updatedAdsDto
     ) {
         UserEntity user = usersService.getUserByLogin(userLogin);
         Optional<AdsEntity> optionalAds = adsRepository.findByIdAndUserId(
@@ -147,7 +147,7 @@ public class AdsService {
         );
 
         optionalAds.ifPresent(entity -> {
-            entity.setImage(updatedAdsDto.getImage());
+            entity.setDescription(updatedAdsDto.getDescription());
             entity.setTitle(updatedAdsDto.getTitle());
             entity.setPrice(updatedAdsDto.getPrice());
 

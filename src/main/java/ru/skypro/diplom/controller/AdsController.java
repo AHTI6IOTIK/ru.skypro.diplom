@@ -169,7 +169,7 @@ public class AdsController {
     @RolesAllowed({"USER"})
     public AdsDto updateAds(
         @PathVariable("id") long adsId,
-        @RequestBody AdsDto updatedAdsDto,
+        @RequestBody CreateAdsDto updatedAdsDto,
         Authentication authentication
     ) {
         AdsDto updatedAds = adsService.updateAds(
