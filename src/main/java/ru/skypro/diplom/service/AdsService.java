@@ -1,5 +1,6 @@
 package ru.skypro.diplom.service;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import ru.skypro.diplom.dto.ads.*;
 import ru.skypro.diplom.entity.AdsEntity;
@@ -9,12 +10,14 @@ import ru.skypro.diplom.mapping.ads.CreateAdsDtoMapper;
 import ru.skypro.diplom.mapping.ads.FullAdsDtoMapper;
 import ru.skypro.diplom.repository.AdsRepository;
 
+import javax.persistence.EntityNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class AdsService {
-
+    private final FileService fileService;
     private final AdsRepository adsRepository;
     private final UsersService usersService;
     private final AdsCommentService adsCommentService;
@@ -24,6 +27,7 @@ public class AdsService {
     private final FullAdsDtoMapper fullAdsDtoMapper;
 
     public AdsService(
+        FileService fileService,
         AdsRepository adsRepository,
         AdsDtoMapper adsDtoMapper,
         CreateAdsDtoMapper createAdsDtoMapper,
@@ -31,6 +35,7 @@ public class AdsService {
         UsersService usersService,
         AdsCommentService adsCommentService
     ) {
+        this.fileService = fileService;
         this.adsRepository = adsRepository;
         this.adsDtoMapper = adsDtoMapper;
         this.createAdsDtoMapper = createAdsDtoMapper;
@@ -41,7 +46,8 @@ public class AdsService {
 
     public AdsDto createAds(
         String userLogin,
-        CreateAdsDto createAdsDto
+        CreateAdsDto createAdsDto,
+        String image
     ) {
         UserEntity user = usersService.getUserByLogin(userLogin);
 
@@ -56,7 +62,8 @@ public class AdsService {
 
         AdsEntity adsEntity = createAdsDtoMapper.toModel(
             createAdsDto,
-            user
+            user,
+            image
         );
 
         return adsDtoMapper.toDto(adsRepository.save(adsEntity));
@@ -72,18 +79,18 @@ public class AdsService {
     ) {
         List<AdsEntity> myAds = adsRepository.findByUserEmail(userLogin);
 
-        if (myAds.isEmpty()) {
-            return null;
-        }
-
         ResponseWrapperAdsDto wrapperAds = new ResponseWrapperAdsDto();
 
-        wrapperAds.setCount(myAds.size());
-        wrapperAds.setResults(
-            adsDtoMapper.toAdsDtoList(myAds)
-                .toArray(new AdsDto[0])
-        );
-
+        if (!myAds.isEmpty()) {
+            wrapperAds.setCount(myAds.size());
+            wrapperAds.setResults(
+                adsDtoMapper.toAdsDtoList(myAds)
+                    .toArray(new AdsDto[0])
+            );
+        } else {
+            wrapperAds.setCount(0);
+            wrapperAds.setResults(new AdsDto[0]);
+        }
 
         return wrapperAds;
     }
@@ -157,5 +164,35 @@ public class AdsService {
         return optionalAds
             .map(adsDtoMapper::toDto)
             .orElse(null);
+    }
+
+    public boolean updateAdsImagePath(
+        Long adsId,
+        String userLogin,
+        String filePath
+    ) {
+        Optional<AdsEntity> optionalAds = adsRepository.findByIdAndUserEmail(
+            adsId,
+            userLogin
+        );
+
+        AdsEntity adsEntity = optionalAds.orElseThrow(EntityNotFoundException::new);
+        String oldImage = adsEntity.getImage();
+
+        try {
+            if (!oldImage.isEmpty()) {
+                fileService.removeFileByPath(oldImage);
+            }
+        } catch (IOException ignored) {}
+
+        adsEntity.setImage(filePath);
+
+        try {
+            adsRepository.save(adsEntity);
+        } catch (DataAccessException e) {
+            return false;
+        }
+
+        return true;
     }
 }

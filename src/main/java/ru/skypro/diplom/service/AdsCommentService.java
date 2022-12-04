@@ -39,18 +39,18 @@ public class AdsCommentService {
 
     public ResponseWrapperAdsCommentDto getAdsComments(long adPk) {
         List<CommentEntity> commentList = commentRepository.findByAdsId(adPk);
-
-        if (commentList.isEmpty()) {
-            return null;
-        }
-
         ResponseWrapperAdsCommentDto wrapperAdsComment = new ResponseWrapperAdsCommentDto();
 
-        wrapperAdsComment.setCount(commentList.size());
-        wrapperAdsComment.setResults(
-            adsCommentDtoMapper.toAdsDtoList(commentList)
-                .toArray(new AdsCommentDto[0])
-        );
+        if (commentList.isEmpty()) {
+            wrapperAdsComment.setCount(0);
+            wrapperAdsComment.setResults(new AdsCommentDto[0]);
+        } else {
+            wrapperAdsComment.setCount(commentList.size());
+            wrapperAdsComment.setResults(
+                adsCommentDtoMapper.toAdsDtoList(commentList)
+                    .toArray(new AdsCommentDto[0])
+            );
+        }
 
         return wrapperAdsComment;
     }

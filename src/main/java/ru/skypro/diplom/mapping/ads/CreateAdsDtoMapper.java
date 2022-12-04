@@ -9,7 +9,8 @@ import ru.skypro.diplom.entity.UserEntity;
 @Mapper(componentModel = "spring")
 public interface CreateAdsDtoMapper {
     @Mapping(target = "id", ignore = true)
-    AdsEntity toModel(CreateAdsDto dto, UserEntity user);
+    @Mapping(target = "image", source = "image")
+    AdsEntity toModel(CreateAdsDto dto, UserEntity user, String image);
 
     CreateAdsDto toDto(AdsEntity entity);
 }

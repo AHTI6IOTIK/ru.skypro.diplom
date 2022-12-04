@@ -16,7 +16,6 @@
                 <constraints nullable="false"/>
             </column>
 
-
             <column name="image" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
@@ -34,5 +33,12 @@
             </column>
 
         </createTable>
+    </changeSet>
+    <changeSet id="2" author="ads_service">
+        <dropNotNullConstraint
+            columnName="image"
+            schemaName="public"
+            tableName="ads"
+        />
     </changeSet>
 </databaseChangeLog>

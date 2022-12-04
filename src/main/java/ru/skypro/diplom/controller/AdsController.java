@@ -12,10 +12,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.diplom.dto.ads.*;
+import ru.skypro.diplom.exception.ImageProcessException;
 import ru.skypro.diplom.service.AdsService;
+import ru.skypro.diplom.service.FileService;
 
 import javax.annotation.security.RolesAllowed;
+import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 
 @RestController
@@ -29,12 +33,17 @@ import javax.servlet.http.HttpServletResponse;
     }
 )
 public class AdsController {
+    private static final String ADS_IMAGE_PLACE = "/ads";
+
     private final AdsService adsService;
+    private final FileService fileService;
 
     public AdsController(
-        AdsService service
+        AdsService service,
+        FileService fileService
     ) {
         this.adsService = service;
+        this.fileService = fileService;
     }
 
     @GetMapping
@@ -62,8 +71,18 @@ public class AdsController {
         @RequestPart(value = "properties") CreateAdsDto createAdsDto,
         @RequestPart(value = "image") MultipartFile image,
         Authentication authentication
-    ) {
-        AdsDto adsDto = adsService.createAds(authentication.getName(), createAdsDto);
+    ) throws IOException {
+
+        String imagePath = fileService.saveLimitedUploadedFile(
+            ADS_IMAGE_PLACE,
+            image
+        );
+
+        AdsDto adsDto = adsService.createAds(
+            authentication.getName(),
+            createAdsDto,
+            imagePath
+        );
 
         if (null == adsDto) {
             throw new ResponseStatusException(HttpStatus.CREATED);
@@ -97,10 +116,6 @@ public class AdsController {
             details,
             principal
         );
-
-        if (null == ads) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
 
         return ads;
     }
@@ -185,5 +200,50 @@ public class AdsController {
         }
 
         return updatedAds;
+    }
+
+    @PatchMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+        summary = "updateAds",
+        responses = {
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "204", content = @Content()),
+            @ApiResponse(responseCode = "404", content = @Content())
+        }
+    )
+    @RolesAllowed({"USER"})
+    public String imageAdsUpdate(
+        @PathVariable("id") long adsId,
+        @RequestPart MultipartFile image,
+        Authentication authentication
+    ) throws IOException {
+        String filePath = "";
+        try {
+            filePath = fileService.saveLimitedUploadedFile(
+                ADS_IMAGE_PLACE,
+                image
+            );
+
+            boolean isSaved = adsService.updateAdsImagePath(
+                adsId,
+                authentication.getName(),
+                filePath
+            );
+
+            if (!isSaved) {
+                throw new ImageProcessException();
+            }
+
+            return String.format("{\"data\":{ \"image\": \"%s\"}}", filePath);
+        } catch (EntityNotFoundException | ImageProcessException e) {
+            fileService.removeFileByPath(filePath);
+            return "";
+        } catch (IOException e) {
+            throw new ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                e.getMessage(),
+                e
+            );
+        }
     }
 }

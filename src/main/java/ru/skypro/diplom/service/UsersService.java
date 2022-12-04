@@ -1,5 +1,6 @@
 package ru.skypro.diplom.service;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import ru.skypro.diplom.dto.auth.NewPasswordDto;
 import ru.skypro.diplom.dto.profile.CreateUserDto;
@@ -13,19 +14,24 @@ import ru.skypro.diplom.mapping.user.CreateUserDtoMapper;
 import ru.skypro.diplom.mapping.user.UserDtoMapper;
 import ru.skypro.diplom.repository.UserRepository;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UsersService {
+    private final FileService fileService;
     private final UserRepository userRepository;
     private final CreateUserDtoMapper createUserDtoMapper;
     private final UserDtoMapper userDtoMapper;
 
     public UsersService(
+        FileService fileService,
         UserRepository userRepository,
         CreateUserDtoMapper createUserDtoMapper,
         UserDtoMapper userDtoMapper
     ) {
+        this.fileService = fileService;
         this.userRepository = userRepository;
         this.createUserDtoMapper = createUserDtoMapper;
         this.userDtoMapper = userDtoMapper;
@@ -44,9 +50,9 @@ public class UsersService {
 
     public CreateUserDto createUser(CreateUserDto createUserDto) {
 
-        int countUser = userRepository.countByEmail(createUserDto.getEmail());
+        int countUser = userRepository.countByEmail(createUserDto.getUsername());
         if (countUser > 0) {
-            throw new UserAlreadyCreatedException(createUserDto.getEmail());
+            throw new UserAlreadyCreatedException(createUserDto.getUsername());
         }
 
         UserEntity user = createUserDtoMapper.toModel(createUserDto);
@@ -107,5 +113,32 @@ public class UsersService {
 
         userEntity.setPassword(newPasswordDto.getNewPassword());
         return newPasswordDto;
+    }
+
+    public boolean updateUserAvatarPath(
+        String userLogin,
+        String filePath
+    ) {
+        UserEntity user = getUserByLogin(userLogin);
+        Optional<String> optionalAvatar = Optional.ofNullable(user.getAvatar());
+
+        optionalAvatar.ifPresent(oldAvatar -> {
+                if (!oldAvatar.isEmpty()) {
+                    try {
+                        fileService.removeFileByPath(oldAvatar);
+                    } catch (IOException ignored) {}
+                }
+            }
+        );
+
+        user.setAvatar(filePath);
+
+        try {
+            userRepository.save(user);
+        } catch (DataAccessException e) {
+            return false;
+        }
+
+        return true;
     }
 }

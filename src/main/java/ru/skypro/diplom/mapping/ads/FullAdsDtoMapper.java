@@ -14,6 +14,7 @@ public interface FullAdsDtoMapper {
     UserDto dtoToUserDto(FullAdsDto dto);
 
     @Mapping(source = "dto.pk", target = "id")
+    @Mapping(target = "image", source = "dto.image")
     @Mapping(target = "user.password", ignore = true)
     AdsEntity toModel(FullAdsDto dto, UserDto user);
 

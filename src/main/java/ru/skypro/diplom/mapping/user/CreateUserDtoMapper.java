@@ -8,6 +8,10 @@ import ru.skypro.diplom.entity.UserEntity;
 @Mapper(componentModel = "spring")
 public interface CreateUserDtoMapper {
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "avatar", ignore = true)
+    @Mapping(target = "email", source = "username")
     UserEntity toModel(CreateUserDto dto);
+
+    @Mapping(target = "username", source = "email")
     CreateUserDto toDto(UserEntity entity);
 }

@@ -33,4 +33,11 @@
             </column>
         </createTable>
     </changeSet>
+    <changeSet id="2" author="user_service">
+        <addColumn tableName="user">
+            <column name="avatar" type="varchar(255)" defaultOnNull="true">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

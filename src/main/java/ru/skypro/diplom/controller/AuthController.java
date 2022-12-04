@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.diplom.dto.auth.LoginReqDto;
-import ru.skypro.diplom.dto.auth.RegReqDto;
-import ru.skypro.diplom.dto.profile.RoleEnum;
+import ru.skypro.diplom.dto.profile.CreateUserDto;
+import ru.skypro.diplom.exception.UserAlreadyCreatedException;
+import ru.skypro.diplom.mapping.user.RegReqDtoMapper;
 import ru.skypro.diplom.service.AuthService;
+import ru.skypro.diplom.service.UsersService;
 
 import static ru.skypro.diplom.dto.profile.RoleEnum.USER;
 
@@ -22,8 +25,9 @@ import static ru.skypro.diplom.dto.profile.RoleEnum.USER;
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
-
     private final AuthService authService;
+    private final UsersService usersService;
+    private final RegReqDtoMapper regReqDtoMapper;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginReqDto req) {
@@ -35,12 +39,25 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegReqDto req) {
-        RoleEnum roleEnum = req.getRoleEnum() == null ? USER : req.getRoleEnum();
-        if (authService.register(req, roleEnum)) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    public ResponseEntity<?> register(
+        @RequestBody CreateUserDto createUserDto
+    ) {
+        try {
+            usersService.createUser(createUserDto);
+            if (
+                authService.register(
+                    regReqDtoMapper.fromCreateUser(createUserDto, USER),
+                    USER
+                )
+            ) {
+                return ResponseEntity.ok()
+                    .build();
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .build();
+            }
+        } catch (UserAlreadyCreatedException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }
 }
