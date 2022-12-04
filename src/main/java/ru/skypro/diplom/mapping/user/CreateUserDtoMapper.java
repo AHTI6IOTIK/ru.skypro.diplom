@@ -10,6 +10,7 @@ public interface CreateUserDtoMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "avatar", ignore = true)
     @Mapping(target = "email", source = "username")
+    @Mapping(target = "role", ignore = true, defaultValue = "USER")
     UserEntity toModel(CreateUserDto dto);
 
     @Mapping(target = "username", source = "email")

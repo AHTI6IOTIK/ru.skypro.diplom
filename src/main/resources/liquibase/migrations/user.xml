@@ -40,4 +40,26 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet id="3" author="user_service">
+        <addColumn tableName="user">
+            <column name="role" type="varchar(50)" defaultValue="USER">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="4" author="user_service">
+        <addDefaultValue
+            columnName="role"
+            defaultValue="USER"
+            schemaName="public"
+            tableName="user"
+        />
+    </changeSet>
+    <changeSet id="5" author="ads_service">
+        <dropNotNullConstraint
+                columnName="role"
+                schemaName="public"
+                tableName="user"
+        />
+    </changeSet>
 </databaseChangeLog>

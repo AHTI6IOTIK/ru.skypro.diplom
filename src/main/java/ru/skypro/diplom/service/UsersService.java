@@ -1,6 +1,10 @@
 package ru.skypro.diplom.service;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ru.skypro.diplom.dto.auth.NewPasswordDto;
 import ru.skypro.diplom.dto.profile.CreateUserDto;
@@ -19,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UsersService {
+public class UsersService implements UserDetailsService {
     private final FileService fileService;
     private final UserRepository userRepository;
     private final CreateUserDtoMapper createUserDtoMapper;
@@ -140,5 +144,32 @@ public class UsersService {
         }
 
         return true;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<UserEntity> userOptional = userRepository.findByEmail(username);
+
+        return userOptional
+            .map(
+                userEntity -> User.builder()
+                    .username(userEntity.getEmail())
+                    .password(userEntity.getPassword())
+                    .roles(userEntity.getRole())
+                    .build()
+            )
+            .orElseThrow(() -> new UsernameNotFoundException("User not found #" + username));
+    }
+
+    public boolean login(
+        String username,
+        String password
+    ) {
+        UserEntity user = userRepository.findByEmailAndPassword(
+            username,
+            password
+        );
+
+        return null != user;
     }
 }

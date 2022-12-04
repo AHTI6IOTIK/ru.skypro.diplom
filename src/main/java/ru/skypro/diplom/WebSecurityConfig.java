@@ -1,15 +1,17 @@
 package ru.skypro.diplom;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+
+import javax.sql.DataSource;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -19,6 +21,9 @@ import static org.springframework.security.config.Customizer.withDefaults;
     jsr250Enabled = true
 )
 public class WebSecurityConfig {
+
+    @Autowired
+    private DataSource dataSource;
 
     private static final String[] AUTH_WHITELIST = {
         "/swagger-resources/**",
@@ -31,18 +36,20 @@ public class WebSecurityConfig {
     };
 
     @Bean
-    public InMemoryUserDetailsManager userDetailsService() {
-        UserDetails user = User.withDefaultPasswordEncoder()
-                .username("user@gmail.com")
-                .password("password")
-                .roles("USER")
-                .build();
-        UserDetails admin = User.withDefaultPasswordEncoder()
-                .username("admin@gmail.com")
-                .password("password")
-                .roles("ADMIN")
-                .build();
-        return new InMemoryUserDetailsManager(user, admin);
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
+    }
+
+    @Bean
+    public AuthenticationManagerBuilder authenticationManagerBuilder(AuthenticationManagerBuilder auth) throws Exception {
+        auth.jdbcAuthentication()
+            .dataSource(dataSource)
+            .usersByUsernameQuery(
+                "select email as username, password, 'true' from user where email=?")
+            .authoritiesByUsernameQuery(
+                "select email as username, authority from user where email=?");
+
+        return auth;
     }
 
     @Bean
@@ -61,7 +68,8 @@ public class WebSecurityConfig {
                     .authenticated()
             )
             .httpBasic(withDefaults())
-            .cors();
+            .cors()
+        ;
         return http.build();
     }
 }
