@@ -1,11 +1,11 @@
 package ru.skypro.diplom.dto.auth;
 
 import lombok.Data;
-import ru.skypro.diplom.dto.profile.Role;
+import ru.skypro.diplom.dto.profile.RoleEnum;
 
 @Data
-public class RegReq {
+public class RegReqDto {
     private String username;
     private String password;
-    private Role role;
+    private RoleEnum roleEnum;
 }

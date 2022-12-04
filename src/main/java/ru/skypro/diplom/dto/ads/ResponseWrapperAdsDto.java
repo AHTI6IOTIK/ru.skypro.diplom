@@ -3,7 +3,7 @@ package ru.skypro.diplom.dto.ads;
 import lombok.Data;
 
 @Data
-public class ResponseWrapperAds {
+public class ResponseWrapperAdsDto {
     private long count;
-    private Ads[] result;
+    private AdsDto[] results;
 }

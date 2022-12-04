@@ -3,7 +3,7 @@ package ru.skypro.diplom.dto.profile;
 import lombok.Data;
 
 @Data
-public class ResponseWrapperUser {
+public class ResponseWrapperUserDto {
     private long count;
-    private User[] result;
+    private UserDto[] result;
 }

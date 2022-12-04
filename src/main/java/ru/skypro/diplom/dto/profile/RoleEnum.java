@@ -1,5 +1,5 @@
 package ru.skypro.diplom.dto.profile;
 
-public enum Role {
+public enum RoleEnum {
     USER, ADMIN
 }
