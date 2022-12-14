@@ -3,14 +3,14 @@ package ru.skypro.diplom.dto.ads;
 import lombok.Data;
 
 @Data
-public class FullAds {
+public class FullAdsDto {
+    private String image;
     private String authorFirstName;
     private String authorLastName;
-    private String description;
     private String email;
-    private String image;
     private String phone;
     private long pk;
-    private long price;
+    private int price;
     private String title;
+    private String description;
 }
