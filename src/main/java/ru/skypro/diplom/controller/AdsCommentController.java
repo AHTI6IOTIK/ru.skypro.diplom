@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -28,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
         @ApiResponse(responseCode = "403", content = @Content())
     }
 )
+@SecurityRequirement(name = "basicAuth")
 public class AdsCommentController {
     private final AdsCommentService adsCommentService;
 

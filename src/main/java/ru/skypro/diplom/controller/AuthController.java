@@ -40,8 +40,9 @@ public class AuthController {
             return ResponseEntity.ok()
                 .build();
         } catch (UserAlreadyCreatedException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .build();
+            return ResponseEntity
+                .badRequest()
+                .body(e.getMessage());
         }
     }
 }

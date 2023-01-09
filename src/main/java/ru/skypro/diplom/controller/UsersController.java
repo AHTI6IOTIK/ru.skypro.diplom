@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -14,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.diplom.dto.auth.NewPasswordDto;
 import ru.skypro.diplom.dto.profile.CreateUserDto;
 import ru.skypro.diplom.dto.profile.ResponseWrapperUserDto;
+import ru.skypro.diplom.dto.profile.UpdateUserDto;
 import ru.skypro.diplom.dto.profile.UserDto;
 import ru.skypro.diplom.exception.CurrentPasswordNotEqualsException;
 import ru.skypro.diplom.exception.ImageProcessException;
@@ -35,6 +37,7 @@ import java.io.IOException;
         @ApiResponse(responseCode = "403", content = @Content())
     }
 )
+@SecurityRequirement(name = "basicAuth")
 public class UsersController {
     private static final String USER_IMAGE_PLACE = "/user";
 
@@ -126,7 +129,7 @@ public class UsersController {
     )
     @RolesAllowed({"USER"})
     public UserDto updateUser(
-        @RequestBody UserDto updatedUser,
+        @RequestBody UpdateUserDto updatedUser,
         Authentication authentication
     ) {
         try {

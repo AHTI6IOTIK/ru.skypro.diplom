@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import ru.skypro.diplom.dto.auth.NewPasswordDto;
 import ru.skypro.diplom.dto.profile.CreateUserDto;
 import ru.skypro.diplom.dto.profile.ResponseWrapperUserDto;
+import ru.skypro.diplom.dto.profile.UpdateUserDto;
 import ru.skypro.diplom.dto.profile.UserDto;
 import ru.skypro.diplom.entity.UserEntity;
 import ru.skypro.diplom.exception.CurrentPasswordNotEqualsException;
@@ -90,7 +91,7 @@ public class UsersService implements UserDetailsService {
 
     public UserDto updateUser(
         String userLogin,
-        UserDto updatedUser
+        UpdateUserDto updatedUser
     ) {
         UserEntity user = getUserByLogin(userLogin);
 
@@ -116,6 +117,8 @@ public class UsersService implements UserDetailsService {
         }
 
         userEntity.setPassword(newPasswordDto.getNewPassword());
+        userRepository.save(userEntity);
+
         return newPasswordDto;
     }
 

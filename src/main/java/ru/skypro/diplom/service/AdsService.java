@@ -96,19 +96,20 @@ public class AdsService {
     }
 
     public ResponseWrapperAdsDto getAllAds() {
+        ResponseWrapperAdsDto wrapperAds = new ResponseWrapperAdsDto();
+
         List<AdsEntity> adsList = adsRepository.findAll();
 
-        if (adsList.isEmpty()) {
-            return null;
+        if (!adsList.isEmpty()) {
+            wrapperAds.setResults(
+                adsDtoMapper.toAdsDtoList(adsList)
+                    .toArray(new AdsDto[0])
+            );
+            wrapperAds.setCount(adsList.size());
+        } else {
+            wrapperAds.setCount(0);
+            wrapperAds.setResults(new AdsDto[0]);
         }
-
-        ResponseWrapperAdsDto wrapperAds = new ResponseWrapperAdsDto();
-        wrapperAds.setResults(
-            adsDtoMapper.toAdsDtoList(adsList)
-                .toArray(new AdsDto[0])
-        );
-
-        wrapperAds.setCount(adsList.size());
 
         return wrapperAds;
     }
