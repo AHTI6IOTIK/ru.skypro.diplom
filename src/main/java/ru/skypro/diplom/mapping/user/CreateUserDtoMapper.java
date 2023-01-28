@@ -9,9 +9,10 @@ import ru.skypro.diplom.entity.UserEntity;
 public interface CreateUserDtoMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "avatar", ignore = true)
-    @Mapping(target = "email", source = "username")
+    @Mapping(target = "email", source = "dto.username")
     @Mapping(target = "role", ignore = true)
-    UserEntity toModel(CreateUserDto dto);
+    @Mapping(target = "password", source = "password")
+    UserEntity toModel(CreateUserDto dto, String password);
 
     @Mapping(target = "username", source = "email")
     CreateUserDto toDto(UserEntity entity);

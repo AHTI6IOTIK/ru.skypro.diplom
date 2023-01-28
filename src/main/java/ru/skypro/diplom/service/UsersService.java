@@ -5,6 +5,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.skypro.diplom.dto.auth.NewPasswordDto;
 import ru.skypro.diplom.dto.profile.CreateUserDto;
@@ -29,17 +30,20 @@ public class UsersService implements UserDetailsService {
     private final UserRepository userRepository;
     private final CreateUserDtoMapper createUserDtoMapper;
     private final UserDtoMapper userDtoMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public UsersService(
         FileService fileService,
         UserRepository userRepository,
         CreateUserDtoMapper createUserDtoMapper,
-        UserDtoMapper userDtoMapper
+        UserDtoMapper userDtoMapper,
+        PasswordEncoder passwordEncoder
     ) {
         this.fileService = fileService;
         this.userRepository = userRepository;
         this.createUserDtoMapper = createUserDtoMapper;
         this.userDtoMapper = userDtoMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UserEntity getUserByLogin(String userEmail) {
@@ -60,7 +64,10 @@ public class UsersService implements UserDetailsService {
             throw new UserAlreadyCreatedException(createUserDto.getUsername());
         }
 
-        UserEntity user = createUserDtoMapper.toModel(createUserDto);
+        UserEntity user = createUserDtoMapper.toModel(
+            createUserDto,
+            passwordEncoder.encode(createUserDto.getPassword())
+        );
         UserEntity createdUser = userRepository.save(user);
 
         return createUserDtoMapper.toDto(createdUser);
