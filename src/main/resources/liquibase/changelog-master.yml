@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: liquibase/migrations/ads.xml
+  - include:
+      file: liquibase/migrations/comment.xml
+  - include:
+      file: liquibase/migrations/user.xml

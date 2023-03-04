@@ -1,0 +1,199 @@
+package ru.skypro.diplom.service;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import ru.skypro.diplom.dto.ads.*;
+import ru.skypro.diplom.entity.AdsEntity;
+import ru.skypro.diplom.entity.UserEntity;
+import ru.skypro.diplom.mapping.ads.AdsDtoMapper;
+import ru.skypro.diplom.mapping.ads.CreateAdsDtoMapper;
+import ru.skypro.diplom.mapping.ads.FullAdsDtoMapper;
+import ru.skypro.diplom.repository.AdsRepository;
+
+import javax.persistence.EntityNotFoundException;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class AdsService {
+    private final FileService fileService;
+    private final AdsRepository adsRepository;
+    private final UsersService usersService;
+    private final AdsCommentService adsCommentService;
+
+    private final AdsDtoMapper adsDtoMapper;
+    private final CreateAdsDtoMapper createAdsDtoMapper;
+    private final FullAdsDtoMapper fullAdsDtoMapper;
+
+    public AdsService(
+        FileService fileService,
+        AdsRepository adsRepository,
+        AdsDtoMapper adsDtoMapper,
+        CreateAdsDtoMapper createAdsDtoMapper,
+        FullAdsDtoMapper fullAdsDtoMapper,
+        UsersService usersService,
+        AdsCommentService adsCommentService
+    ) {
+        this.fileService = fileService;
+        this.adsRepository = adsRepository;
+        this.adsDtoMapper = adsDtoMapper;
+        this.createAdsDtoMapper = createAdsDtoMapper;
+        this.fullAdsDtoMapper = fullAdsDtoMapper;
+        this.usersService = usersService;
+        this.adsCommentService = adsCommentService;
+    }
+
+    public AdsDto createAds(
+        String userLogin,
+        CreateAdsDto createAdsDto,
+        String image
+    ) {
+        UserEntity user = usersService.getUserByLogin(userLogin);
+
+        int count = adsRepository.countByTitleAndUserId(
+            createAdsDto.getTitle(),
+            user.getId()
+        );
+
+        if (count > 0) {
+            return null;
+        }
+
+        AdsEntity adsEntity = createAdsDtoMapper.toModel(
+            createAdsDto,
+            user,
+            image
+        );
+
+        return adsDtoMapper.toDto(adsRepository.save(adsEntity));
+    }
+
+    public ResponseWrapperAdsDto getMyAds(
+        String userLogin,
+        boolean authenticated,
+        String authority,
+        Object credentials,
+        Object details,
+        Object principal
+    ) {
+        List<AdsEntity> myAds = adsRepository.findByUserEmail(userLogin);
+
+        ResponseWrapperAdsDto wrapperAds = new ResponseWrapperAdsDto();
+
+        if (!myAds.isEmpty()) {
+            wrapperAds.setCount(myAds.size());
+            wrapperAds.setResults(
+                adsDtoMapper.toAdsDtoList(myAds)
+                    .toArray(new AdsDto[0])
+            );
+        } else {
+            wrapperAds.setCount(0);
+            wrapperAds.setResults(new AdsDto[0]);
+        }
+
+        return wrapperAds;
+    }
+
+    public ResponseWrapperAdsDto getAllAds() {
+        ResponseWrapperAdsDto wrapperAds = new ResponseWrapperAdsDto();
+
+        List<AdsEntity> adsList = adsRepository.findAll();
+
+        if (!adsList.isEmpty()) {
+            wrapperAds.setResults(
+                adsDtoMapper.toAdsDtoList(adsList)
+                    .toArray(new AdsDto[0])
+            );
+            wrapperAds.setCount(adsList.size());
+        } else {
+            wrapperAds.setCount(0);
+            wrapperAds.setResults(new AdsDto[0]);
+        }
+
+        return wrapperAds;
+    }
+
+    public boolean removeAds(
+        long adsId,
+        String userLogin
+    ) {
+        Optional<AdsEntity> optionalAds = adsRepository.findByIdAndUserEmail(
+            adsId,
+            userLogin
+        );
+
+        optionalAds.ifPresent((adsEntity -> {
+            adsCommentService.deleteAdsCommentByDeletedAds(adsEntity.getId());
+            adsRepository.delete(adsEntity);
+        }));
+
+        return optionalAds.isPresent();
+    }
+
+    public FullAdsDto getAds(
+        long adsId
+    ) {
+        Optional<AdsEntity> optionalAds = adsRepository.findById(
+            adsId
+        );
+
+        return optionalAds
+            .map(fullAdsDtoMapper::toDto)
+            .orElse(null);
+    }
+
+    public AdsDto updateAds(
+        String userLogin,
+        long adsId,
+        CreateAdsDto updatedAdsDto
+    ) {
+        UserEntity user = usersService.getUserByLogin(userLogin);
+        Optional<AdsEntity> optionalAds = adsRepository.findByIdAndUserId(
+            adsId,
+            user.getId()
+        );
+
+        optionalAds.ifPresent(entity -> {
+            entity.setDescription(updatedAdsDto.getDescription());
+            entity.setTitle(updatedAdsDto.getTitle());
+            entity.setPrice(updatedAdsDto.getPrice());
+
+            adsRepository.save(entity);
+        });
+
+        return optionalAds
+            .map(adsDtoMapper::toDto)
+            .orElse(null);
+    }
+
+    public boolean updateAdsImagePath(
+        Long adsId,
+        String userLogin,
+        String filePath
+    ) {
+        Optional<AdsEntity> optionalAds = adsRepository.findByIdAndUserEmail(
+            adsId,
+            userLogin
+        );
+
+        AdsEntity adsEntity = optionalAds.orElseThrow(EntityNotFoundException::new);
+        String oldImage = adsEntity.getImage();
+
+        try {
+            if (!oldImage.isEmpty()) {
+                fileService.removeFileByPath(oldImage);
+            }
+        } catch (IOException ignored) {}
+
+        adsEntity.setImage(filePath);
+
+        try {
+            adsRepository.save(adsEntity);
+        } catch (DataAccessException e) {
+            return false;
+        }
+
+        return true;
+    }
+}
